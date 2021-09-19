@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
 import datetime as dt
-import pandas as pd
 # from dateutil.relativedelta import relativedelta
 
 # Set up Database
@@ -22,11 +21,6 @@ print(Base.classes.keys())
 # # Save reference to tables
 Measurement = Base.classes.measurement
 Station = Base.classes.station
-
-
-#Create session(link) from Python to DB
-session = Session(engine)
-
 
 # print(Base.classes.keys())
 
@@ -49,12 +43,12 @@ def testtest():
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-    
-    
+    #Create session(link) from Python to DB
+    session = Session(engine)
 
     #Query Measurement
-    results = session.query(Measurement.date, Measurement.prcp)\
-                    .order_by(Measurement.date).all()
+    results = (session.query(Measurement.date, Measurement.prcp)
+                    .order_by(Measurement.date)).all()
 
     #create dictionary
     d={}
@@ -74,11 +68,12 @@ def precipitation():
 
 @app.route("/api/v1.0/stations")
 def stations():
-    
+    #Create session(link) from Python to DB
+    session = Session(engine)
 
     #Query Measurement
-    results = session.query(Station.station, Station.name)\
-                    .order_by(Station.station).all()
+    results = (session.query(Station.station, Station.name)
+                    .order_by(Station.station)).all()
 
     #create list
     li=[]
@@ -94,42 +89,7 @@ def stations():
         lijson
     )
 
-@app.route("/api/v1.0/tobs")
-def tobs():
-    #Create session(link) from Python to DB
-    session = Session(engine)
 
-    #Query Measurement
-    max_date = session.query(func.max(Measurement.date)).scalar()
-
-    previous_year = dt.datetime.fromisoformat(max_date)-dt.timedelta(days=365)
-    previous_year = previous_year.date()
-    
-    results = session.query(Measurement.tobs).\
-        filter(Measurement.date >= previous_year).\
-        filter(Measurement.station == 'USC00519281').all()
-
-    tobs= list(np.ravel(results))
-
-    return jsonify(tobs=tobs)
-
-    
-
-
-    # dt.datetime.fromisoformat(results)
-    #print(dt.datetime.fromisoformat(results)-dt.timedelta(days=365))
-
-
-    
-    #put all results into the dictionary
-    #for result in results:
-        #li.append(result[0])
-        #print(result[0],result[1])
-
-    #lijson = jsonify(li)
-   
-    return(jsonify(results))
-  
 
 
 
